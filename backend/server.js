@@ -38,7 +38,10 @@ mongoose.connect(MONGODB_URI, {
 
 // Routes
 const quizRoutes = require('./routes/quiz');
+const commissionRoutes = require('./routes/commission');
+
 app.use('/api/quiz', quizRoutes);
+app.use('/api/commission', commissionRoutes);
 
 // Catch-all handler for any request that doesn't match the ones above
 app.get('*', (req, res) => {

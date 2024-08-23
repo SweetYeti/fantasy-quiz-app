@@ -8,6 +8,9 @@ import StartPage from './components/StartPage';
 import VideoBackground from './components/VideoBackground';
 import FireflyEffect from './components/FireflyEffect';
 import CommissionForm from './components/CommissionForm';
+import Modal from './components/Modal';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsAndConditions from './components/TermsAndConditions';
 
 const zodiacSigns = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -86,6 +89,8 @@ function App() {
   const [country, setCountry] = useState('US');
   const [isConjuring, setIsConjuring] = useState(false);
   const [showCommissionForm, setShowCommissionForm] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
 
   useEffect(() => {
     console.log('App component mounted');
@@ -96,6 +101,7 @@ function App() {
       showResults,
       showCommissionForm
     });
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleStartQuiz = () => {
@@ -159,6 +165,8 @@ function App() {
       });
       console.log('API response:', response.data);
       setMagicalProfile(response.data);
+      // Store the magical profile in localStorage
+      localStorage.setItem('magicalProfile', JSON.stringify(response.data));
     } catch (error) {
       console.error('Error generating magical profile:', error);
       setMagicalProfile({ 
@@ -232,15 +240,48 @@ function App() {
     setShowCommissionForm(false);
   };
 
-  const handleCommissionSubmit = (formData) => {
-    // Here you would typically send the form data to your backend
-    console.log('Commission form submitted:', formData);
-    // You can add logic here to send the data to your server
-    // After successful submission, you might want to show a confirmation message
-    setShowCommissionForm(false);
-    // You might want to add a new state for showing a confirmation message
-    // setShowConfirmation(true);
+  const handleCommissionSubmit = async (formData) => {
+    const magicalProfile = JSON.parse(localStorage.getItem('magicalProfile'));
+    const dataToSend = {
+      ...formData,
+      magicalProfile
+    };
+    
+    try {
+      const response = await axios.post('http://localhost:3000/api/commission/submit', dataToSend);
+      console.log('Commission submission response:', response.data);
+      
+      // After successful submission, remove the magical profile from localStorage
+      localStorage.removeItem('magicalProfile');
+      
+      setShowCommissionForm(false);
+      // You might want to add a new state for showing a confirmation message
+      // setShowConfirmation(true);
+    } catch (error) {
+      console.error('Error submitting commission:', error);
+      // Handle error (e.g., show error message to user)
+    }
   };
+
+  const handleShowPrivacyPolicy = () => setShowPrivacyPolicy(true);
+  const handleShowTermsAndConditions = () => setShowTermsAndConditions(true);
+  const handleCloseModal = () => {
+    setShowPrivacyPolicy(false);
+    setShowTermsAndConditions(false);
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Delete the reading data from local storage
+      localStorage.removeItem('magicalProfile');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   return (
     <div className="App">
@@ -280,8 +321,26 @@ function App() {
           profile={magicalProfile}
           onBack={handleCommissionBack}
           onSubmit={handleCommissionSubmit}
+          onShowPrivacyPolicy={handleShowPrivacyPolicy}
+          onShowTermsAndConditions={handleShowTermsAndConditions}
         />
       )}
+      <Modal
+        isOpen={showPrivacyPolicy}
+        onClose={handleCloseModal}
+        title=""
+        content={<PrivacyPolicy />}
+      />
+      <Modal
+        isOpen={showTermsAndConditions}
+        onClose={handleCloseModal}
+        title=""
+        content={<TermsAndConditions />}
+      />
+      <div className="footer-links">
+        <button onClick={handleShowPrivacyPolicy}>Privacy Policy</button>
+        <button onClick={handleShowTermsAndConditions}>Terms and Conditions</button>
+      </div>
     </div>
   );
 }

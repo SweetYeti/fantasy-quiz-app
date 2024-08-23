@@ -262,7 +262,7 @@ const CommissionForm = ({ onBack, profile, onSubmit }) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, dataProcessingConsent: e.target.checked }))}
                   required
                 />
-                <span>I consent to the processing of my personal data as described in the <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</span>
+                <span>I consent to the processing of my personal data as described in the <a href="#privacy-policy" onClick={(e) => {e.preventDefault(); /* Show Privacy Policy */}}>Privacy Policy</a>.</span>
               </label>
               <label>
                 <input
@@ -272,7 +272,7 @@ const CommissionForm = ({ onBack, profile, onSubmit }) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, termsAccepted: e.target.checked }))}
                   required
                 />
-                <span>I accept the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>.</span>
+                <span>I accept the <a href="#terms-and-conditions" onClick={(e) => {e.preventDefault(); /* Show Terms and Conditions */}}>Terms and Conditions</a>.</span>
               </label>
               <label>
                 <input

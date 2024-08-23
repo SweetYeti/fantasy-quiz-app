@@ -800,6 +800,36 @@ navigation-buttons button:hover {
   width: 100vw;
 }
 
+.footer-links {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.footer-links button {
+  font-size: 12px;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s, opacity 0.3s;
+  opacity: 0.7;
+}
+
+.footer-links button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  opacity: 1;
+}
+
 .firefly-container {
   position: fixed;
   top: 0;
