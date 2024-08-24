@@ -437,3 +437,9 @@ input[type="tel"] {
 .radio-group input[type="radio"] {
   margin-top: 0.2rem;
 }
+
+.file-size-warning {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
