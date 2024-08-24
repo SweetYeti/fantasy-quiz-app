@@ -5,6 +5,7 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     commissionType: '',
     additionalDetails: '',
     dataProcessingConsent: false,
@@ -57,23 +58,28 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit commission');
+        throw new Error('Failed to submit commission request');
       }
 
       await response.json();
-      alert('Commission submitted successfully!');
+      alert('Commission request submitted successfully! Hanna will review your request and contact you soon.');
       onSubmit(formData);
     } catch (error) {
-      console.error('Error submitting commission:', error);
-      alert('Failed to submit commission. Please try again.');
+      console.error('Error submitting commission request:', error);
+      alert('Failed to submit commission request. Please try again.');
     }
   };
 
   return (
     <div className="commission-form-container">
       <form onSubmit={handleSubmit} className="commission-form">
-        <h2 className="form-title">Commission Your Magical Artwork</h2>
-        <p className="form-description">Bring your vision to life with a custom watercolor or tarot-inspired piece. Fill out the form below to start your magical journey.</p>
+        <h2 className="form-title">Request Your Magical Artwork</h2>
+        <p className="form-description">
+          Bring your vision to life with a custom watercolor or tarot-inspired piece. 
+          Fill out the form below to start your magical journey. Please note that 
+          submitting a request does not guarantee acceptance, as Hanna carefully 
+          selects each project. A 50% deposit will be required before work begins.
+        </p>
         <input
           type="text"
           name="name"
@@ -89,6 +95,14 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
           onChange={handleChange}
           placeholder="Your Email"
           required
+        />
+        <input
+          type="tel"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          placeholder="Your Phone Number (optional, UK only)"
+          pattern="^\+?44\d{10}$|^0\d{10}$"
         />
         <select
           name="commissionType"
@@ -132,7 +146,13 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
               checked={formData.dataProcessingConsent}
               onChange={handleChange}
             />
-            <span>I consent to the processing of my personal data</span>
+            <span>
+              I consent to the processing of my personal data (
+              <button type="button" onClick={onShowPrivacyPolicy} className="inline-link">
+                Privacy Policy
+              </button>
+              )
+            </span>
           </label>
           <label className="checkbox-label">
             <input
@@ -141,7 +161,11 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
               checked={formData.termsAccepted}
               onChange={handleChange}
             />
-            <span>I accept the Terms and Conditions</span>
+            <span>
+              I accept the <button type="button" onClick={onShowTermsAndConditions} className="inline-link">
+                Terms and Conditions
+              </button>
+            </span>
           </label>
           <label className="checkbox-label">
             <input
@@ -155,13 +179,9 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
         </div>
         <div className="form-navigation">
           <button type="button" onClick={onBack} className="back-button">Back</button>
-          <button type="submit" className="submit-button">Submit Commission</button>
+          <button type="submit" className="submit-button">Request Commission</button>
         </div>
       </form>
-      <div className="policy-links">
-        <button onClick={onShowPrivacyPolicy} className="policy-button">Privacy Policy</button>
-        <button onClick={onShowTermsAndConditions} className="policy-button">Terms and Conditions</button>
-      </div>
     </div>
   );
 };
