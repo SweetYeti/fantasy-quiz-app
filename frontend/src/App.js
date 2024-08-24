@@ -11,6 +11,7 @@ import CommissionForm from './components/CommissionForm';
 import Modal from './components/Modal';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsAndConditions from './components/TermsAndConditions';
+import DebugPanel from './components/DebugPanel';
 
 const zodiacSigns = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -91,6 +92,8 @@ function App() {
   const [showCommissionForm, setShowCommissionForm] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
+  const [showPolicyButtons, setShowPolicyButtons] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
 
   useEffect(() => {
     console.log('App component mounted');
@@ -131,12 +134,14 @@ function App() {
     }
   };
 
-  const handleEmailCapture = async (email) => {
+  const handleEmailCapture = (email) => {
     console.log('Email captured:', email);
     setAnswers(prev => ({ ...prev, email }));
     setShowEmailCapture(false);
     console.log('Generating reading...');
     handleGenerateReading();
+    setShowResults(true);
+    setShowPolicyButtons(false);
   };
 
   const handleSkipEmail = () => {
@@ -144,6 +149,8 @@ function App() {
     setShowEmailCapture(false);
     console.log('Generating reading...');
     handleGenerateReading();
+    setShowResults(true);
+    setShowPolicyButtons(false);
   };
 
   const handleGenerateReading = async () => {
@@ -234,10 +241,13 @@ function App() {
 
   const handleCommissionStart = () => {
     setShowCommissionForm(true);
+    setShowPolicyButtons(false);
   };
 
   const handleCommissionBack = () => {
     setShowCommissionForm(false);
+    setShowResults(true);
+    setShowPolicyButtons(false);
   };
 
   const handleCommissionSubmit = async (formData) => {
@@ -263,8 +273,16 @@ function App() {
     }
   };
 
-  const handleShowPrivacyPolicy = () => setShowPrivacyPolicy(true);
-  const handleShowTermsAndConditions = () => setShowTermsAndConditions(true);
+  const handleShowPrivacyPolicy = () => {
+    // Logic to show privacy policy modal
+    setShowPrivacyPolicy(true);
+  };
+
+  const handleShowTermsAndConditions = () => {
+    // Logic to show terms and conditions modal
+    setShowTermsAndConditions(true);
+  };
+
   const handleCloseModal = () => {
     setShowPrivacyPolicy(false);
     setShowTermsAndConditions(false);
@@ -280,6 +298,20 @@ function App() {
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'D') {
+        setDebugMode(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
     };
   }, []);
 
@@ -337,10 +369,22 @@ function App() {
         title=""
         content={<TermsAndConditions />}
       />
-      <div className="footer-links">
-        <button onClick={handleShowPrivacyPolicy}>Privacy Policy</button>
-        <button onClick={handleShowTermsAndConditions}>Terms and Conditions</button>
-      </div>
+      {showPolicyButtons && !showCommissionForm && !showResults && (
+        <div className="footer-links">
+          <button onClick={handleShowPrivacyPolicy}>Privacy Policy</button>
+          <button onClick={handleShowTermsAndConditions}>Terms and Conditions</button>
+        </div>
+      )}
+      {debugMode && (
+        <DebugPanel
+          setCurrentQuestion={setCurrentQuestion}
+          setShowEmailCapture={setShowEmailCapture}
+          setShowResults={setShowResults}
+          setQuizStarted={setQuizStarted}
+          setShowCommissionForm={setShowCommissionForm}
+          totalQuestions={questions.length}
+        />
+      )}
     </div>
   );
 }

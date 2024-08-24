@@ -1,303 +1,167 @@
 import React, { useState } from 'react';
 import './CommissionForm.css';
 
-const CommissionForm = ({ onBack, profile, onSubmit }) => {
-  const [step, setStep] = useState(1);
+const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShowTermsAndConditions }) => {
   const [formData, setFormData] = useState({
-    portraitType: '',
-    customRequests: '',
-    referenceImages: [],
-    contactInfo: {
-      name: '',
-      email: '',
-      phone: '',
-      preferredContact: ''
-    },
-    selectedQuizAnswers: {},
+    name: '',
+    email: '',
+    commissionType: '',
+    additionalDetails: '',
     dataProcessingConsent: false,
     termsAccepted: false,
-    marketingConsent: false
+    marketingConsent: false,
+    referencePhotos: []
   });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
-  const handleContactInfoChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      contactInfo: {
-        ...prevState.contactInfo,
-        [name]: value
-      }
-    }));
-  };
-
-  const handleFileUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const maxFiles = 5;
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const acceptedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-
-    const validFiles = files.slice(0, maxFiles).filter(file => 
-      file.size <= maxSize && acceptedTypes.includes(file.type)
-    );
-
-    const invalidFiles = files.filter(file => 
-      file.size > maxSize || !acceptedTypes.includes(file.type)
-    );
-
-    setFormData(prev => ({
-      ...prev,
-      referenceImages: [...prev.referenceImages, ...validFiles].slice(0, maxFiles)
-    }));
-
-    if (invalidFiles.length > 0 || files.length > maxFiles) {
-      let message = '';
-      if (invalidFiles.length > 0) {
-        message += `${invalidFiles.length} file(s) were not uploaded due to size or format restrictions. `;
-      }
-      if (files.length > maxFiles) {
-        message += `Only the first ${maxFiles} files were accepted.`;
-      }
-      alert(message);
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'file') {
+      setFormData(prevState => ({
+        ...prevState,
+        referencePhotos: Array.from(files).slice(0, 5)
+      }));
+    } else {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: type === 'checkbox' ? checked : value
+      }));
     }
   };
 
-  const removeImage = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      referenceImages: prev.referenceImages.filter((_, i) => i !== index)
-    }));
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files);
+    const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024); // 5MB limit
+    setUploadedFiles(prevFiles => [...prevFiles, ...validFiles].slice(0, 5));
   };
 
-  const handleSubmit = (e) => {
+  const removeFile = (index) => {
+    setUploadedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.dataProcessingConsent || !formData.termsAccepted) {
       alert('Please accept the Privacy Policy and Terms & Conditions to proceed.');
       return;
     }
-    // Proceed with form submission
-    onSubmit(formData);
-  };
 
-  const canProceed = () => {
-    if (step === 1) {
-      return formData.portraitType !== '';
-    }
-    const { name, email, preferredContact } = formData.contactInfo;
-    return (
-      name.trim() !== '' &&
-      email.trim() !== '' &&
-      preferredContact !== '' &&
-      formData.dataProcessingConsent &&
-      formData.termsAccepted
-    );
-  };
+    try {
+      const response = await fetch('http://localhost:3000/api/commission/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...formData, magicalProfile: profile }),
+      });
 
-  const renderNavigationButtons = () => (
-    <div className="form-navigation">
-      {step > 1 && (
-        <button type="button" onClick={onBack} className="back-button">
-          Back to Reading
-        </button>
-      )}
-      {step > 1 && (
-        <button type="button" onClick={() => setStep(step - 1)} className="back-button">
-          Back
-        </button>
-      )}
-      {step < 4 && (
-        <button 
-          type="button" 
-          onClick={() => setStep(step + 1)} 
-          className="skip-button"
-          disabled={canProceed() && step !== 1}
-        >
-          Skip
-        </button>
-      )}
-      {step < 4 ? (
-        <button 
-          type="button" 
-          onClick={() => setStep(step + 1)} 
-          className="next-button"
-          disabled={!canProceed()}
-        >
-          {step === 3 ? 'Upload' : 'Next'}
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="submit-button"
-          disabled={!canProceed()}
-        >
-          Submit
-        </button>
-      )}
-    </div>
-  );
+      if (!response.ok) {
+        throw new Error('Failed to submit commission');
+      }
 
-  const renderStep = () => {
-    switch(step) {
-      case 1:
-        return (
-          <div className="commission-step">
-            <h2>Choose Your Portrait Type</h2>
-            <div className="portrait-options">
-              <label>
-                <input
-                  type="radio"
-                  name="portraitType"
-                  value="watercolor"
-                  checked={formData.portraitType === 'watercolor'}
-                  onChange={handleInputChange}
-                />
-                Watercolor Illustration
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="portraitType"
-                  value="tarot"
-                  checked={formData.portraitType === 'tarot'}
-                  onChange={handleInputChange}
-                />
-                Tarot-Inspired Watercolor
-              </label>
-            </div>
-          </div>
-        );
-      case 2:
-        return (
-          <div className="commission-step">
-            <h2>Custom Requests</h2>
-            <textarea
-              name="customRequests"
-              value={formData.customRequests}
-              onChange={handleInputChange}
-              placeholder="Describe any specific elements or themes you'd like included in your portrait..."
-              rows={5}
-            />
-          </div>
-        );
-      case 3:
-        return (
-          <div className="commission-step">
-            <h2>Reference Images (Optional)</h2>
-            <p className="file-upload-note">
-              You can provide up to 5 images (max 5MB each, JPG, PNG, or GIF) to help Hanna understand your vision. 
-              This step is entirely optional - you can skip it or discuss image ideas with Hanna later.
-            </p>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/gif"
-              multiple
-              onChange={handleFileUpload}
-              className="file-input"
-            />
-            <div className="uploaded-images">
-              {formData.referenceImages.map((image, index) => (
-                <div key={index} className="image-container">
-                  <img 
-                    src={URL.createObjectURL(image)} 
-                    alt={`Reference ${index + 1}`} 
-                  />
-                  <button onClick={() => removeImage(index)} className="remove-image">×</button>
-                </div>
-              ))}
-            </div>
-            <p>{formData.referenceImages.length} of 5 images uploaded</p>
-          </div>
-        );
-      case 4:
-        return (
-          <div className="commission-step">
-            <h2>Contact Information</h2>
-            <input
-              type="text"
-              name="name"
-              value={formData.contactInfo.name}
-              onChange={handleContactInfoChange}
-              placeholder="Your Name"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              value={formData.contactInfo.email}
-              onChange={handleContactInfoChange}
-              placeholder="Your Email"
-              required
-            />
-            <input
-              type="tel"
-              name="phone"
-              value={formData.contactInfo.phone}
-              onChange={handleContactInfoChange}
-              placeholder="Your Phone (optional)"
-            />
-            <select
-              name="preferredContact"
-              value={formData.contactInfo.preferredContact}
-              onChange={handleContactInfoChange}
-              required
-            >
-              <option value="">Preferred method for Hanna to contact you about commissions</option>
-              <option value="email">Email</option>
-              <option value="phone">Phone (UK only)</option>
-            </select>
-            <div className="consent-checkboxes">
-              <label>
-                <input
-                  type="checkbox"
-                  name="dataProcessingConsent"
-                  checked={formData.dataProcessingConsent}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dataProcessingConsent: e.target.checked }))}
-                  required
-                />
-                <span>I consent to the processing of my personal data as described in the <a href="#privacy-policy" onClick={(e) => {e.preventDefault(); /* Show Privacy Policy */}}>Privacy Policy</a>.</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="termsAccepted"
-                  checked={formData.termsAccepted}
-                  onChange={(e) => setFormData(prev => ({ ...prev, termsAccepted: e.target.checked }))}
-                  required
-                />
-                <span>I accept the <a href="#terms-and-conditions" onClick={(e) => {e.preventDefault(); /* Show Terms and Conditions */}}>Terms and Conditions</a>.</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="marketingConsent"
-                  checked={formData.marketingConsent}
-                  onChange={(e) => setFormData(prev => ({ ...prev, marketingConsent: e.target.checked }))}
-                />
-                <span>Yes, I'd like to receive updates about magical portraits and special offers. You can unsubscribe at any time.</span>
-              </label>
-            </div>
-          </div>
-        );
-      default:
-        return null;
+      await response.json();
+      alert('Commission submitted successfully!');
+      onSubmit(formData);
+    } catch (error) {
+      console.error('Error submitting commission:', error);
+      alert('Failed to submit commission. Please try again.');
     }
   };
 
   return (
-    <div className="commission-form content-frame">
-      <h2>Commission Your Magical Portrait</h2>
-      <form onSubmit={handleSubmit}>
-        {renderStep()}
-        {renderNavigationButtons()}
+    <div className="commission-form-container">
+      <form onSubmit={handleSubmit} className="commission-form">
+        <h2 className="form-title">Commission Your Magical Artwork</h2>
+        <p className="form-description">Bring your vision to life with a custom watercolor or tarot-inspired piece. Fill out the form below to start your magical journey.</p>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Your Name"
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Your Email"
+          required
+        />
+        <select
+          name="commissionType"
+          value={formData.commissionType}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select Commission Type</option>
+          <option value="watercolor">Watercolor Illustration ($200)</option>
+          <option value="tarot">Tarot-Inspired Watercolor ($250)</option>
+        </select>
+        <textarea
+          name="additionalDetails"
+          value={formData.additionalDetails}
+          onChange={handleChange}
+          placeholder="Custom Instructions"
+        />
+        <div className="file-upload-section">
+          <label className="file-upload-label">Upload Reference Photos (up to 5, max 5MB each)</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileChange}
+            className="file-input"
+          />
+          <div className="uploaded-images">
+            {uploadedFiles.map((file, index) => (
+              <div key={index} className="image-thumbnail">
+                <img src={URL.createObjectURL(file)} alt={`Uploaded ${index + 1}`} />
+                <button onClick={() => removeFile(index)} className="remove-image">×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="checkbox-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="dataProcessingConsent"
+              checked={formData.dataProcessingConsent}
+              onChange={handleChange}
+            />
+            <span>I consent to the processing of my personal data</span>
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="termsAccepted"
+              checked={formData.termsAccepted}
+              onChange={handleChange}
+            />
+            <span>I accept the Terms and Conditions</span>
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="marketingConsent"
+              checked={formData.marketingConsent}
+              onChange={handleChange}
+            />
+            <span>I'd like to receive magical updates and offers</span>
+          </label>
+        </div>
+        <div className="form-navigation">
+          <button type="button" onClick={onBack} className="back-button">Back</button>
+          <button type="submit" className="submit-button">Submit Commission</button>
+        </div>
       </form>
+      <div className="policy-links">
+        <button onClick={onShowPrivacyPolicy} className="policy-button">Privacy Policy</button>
+        <button onClick={onShowTermsAndConditions} className="policy-button">Terms and Conditions</button>
+      </div>
     </div>
   );
 };
