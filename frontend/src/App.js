@@ -257,38 +257,25 @@ function App() {
   };
 
   const handleCommissionSubmit = async (formData) => {
-    console.log('localStorage magicalProfile:', localStorage.getItem('magicalProfile'));
-    console.log('localStorage quizAnswers:', localStorage.getItem('quizAnswers'));
+    console.log('Received formData:', formData);
 
+    // Add magicalProfile and quizAnswers
     const magicalProfile = JSON.parse(localStorage.getItem('magicalProfile') || '{}');
     const quizAnswers = JSON.parse(localStorage.getItem('quizAnswers') || '[]');
+    formData.append('magicalProfile', JSON.stringify(magicalProfile));
+    formData.append('quizAnswers', JSON.stringify(quizAnswers));
 
-    console.log('Parsed magicalProfile:', magicalProfile);
-    console.log('Parsed quizAnswers:', quizAnswers);
-
-    const dataToSend = new FormData();
-    
-    for (const key in formData) {
-      if (key === 'referencePhotos') {
-        formData[key].forEach((file, index) => {
-          dataToSend.append(`referencePhotos`, file);
-        });
+    console.log('FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(key, value.name, value.size, value.type);
       } else {
-        dataToSend.append(key, formData[key]);
+        console.log(key, value);
       }
     }
-    
-    // Append magicalProfile and quizAnswers as stringified JSON
-    dataToSend.append('magicalProfile', JSON.stringify(magicalProfile));
-    dataToSend.append('quizAnswers', JSON.stringify(quizAnswers));
-    
-    console.log('FormData contents:');
-    for (let [key, value] of dataToSend.entries()) {
-      console.log(key, value);
-    }
-    
+
     try {
-      const response = await axios.post('http://localhost:3000/api/commission/submit', dataToSend, {
+      const response = await axios.post('http://localhost:3000/api/commission/submit', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -299,11 +286,13 @@ function App() {
       localStorage.removeItem('quizAnswers');
       
       setShowCommissionForm(false);
-      // You might want to add a new state for showing a confirmation message
-      // setShowConfirmation(true);
     } catch (error) {
       console.error('Error submitting commission:', error);
-      // Handle error (e.g., show error message to user)
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      }
     }
   };
 

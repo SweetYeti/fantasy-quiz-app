@@ -19,6 +19,8 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
 
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
+  const [fileSizeWarning, setFileSizeWarning] = useState('');
+
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'file') {
@@ -36,8 +38,21 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
-    const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024); // 5MB limit
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const validFiles = files.filter(file => file.size <= maxSize);
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      setFileSizeWarning(`${oversizedFiles.length} file(s) exceeded the 5MB limit and were not added.`);
+    } else {
+      setFileSizeWarning('');
+    }
+
     setUploadedFiles(prevFiles => [...prevFiles, ...validFiles].slice(0, 5));
+    setFormData(prevState => ({
+      ...prevState,
+      referencePhotos: [...prevState.referencePhotos, ...validFiles].slice(0, 5)
+    }));
   };
 
   const removeFile = (index) => {
@@ -46,11 +61,20 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.dataProcessingConsent || !formData.termsAccepted) {
-      alert('Please accept the Privacy Policy and Terms & Conditions to proceed.');
-      return;
-    }
-    onSubmit(formData);
+    const dataToSubmit = new FormData();
+    
+    Object.keys(formData).forEach(key => {
+      if (key === 'referencePhotos') {
+        formData[key].forEach((file, index) => {
+          dataToSubmit.append('referencePhotos', file);
+        });
+      } else {
+        dataToSubmit.append(key, formData[key]);
+      }
+    });
+    
+    console.log('Submitting formData:', dataToSubmit);
+    onSubmit(dataToSubmit);
   };
 
   return (
@@ -112,6 +136,7 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
             onChange={handleFileChange}
             className="file-input"
           />
+          {fileSizeWarning && <p className="file-size-warning">{fileSizeWarning}</p>}
           <div className="uploaded-images">
             {uploadedFiles.map((file, index) => (
               <div key={index} className="image-thumbnail">
