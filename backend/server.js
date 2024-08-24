@@ -17,8 +17,14 @@ app.use(cors({
   origin: 'http://localhost:3001'
 }));
 app.use(express.json());
-const upload = multer({ dest: 'uploads/' });
-app.use(upload.array('referencePhotos', 5));
+const upload = multer({
+  dest: path.join(__dirname, 'temp_uploads'),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fields: 20, // Increase the number of fields allowed
+    files: 5 // Allow up to 5 files
+  }
+});
 
 // Serve static files from the React app's build directory
 app.use(express.static(path.join(__dirname, '../frontend/build')));

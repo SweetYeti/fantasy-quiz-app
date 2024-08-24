@@ -6,22 +6,21 @@ const path = require('path');
 const sharp = require('sharp');
 const fs = require('fs').promises;
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/')
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+const upload = multer({
+  dest: 'temp_uploads/',
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fields: 20, // Increase the number of fields allowed
+    files: 5 // Allow up to 5 files
   }
-})
+});
 
-const upload = multer({ storage: storage });
-
-router.post('/submit', async (req, res) => {
-  console.log('Received form data:', req.body);
-  console.log('Received files:', req.files);
-
+router.post('/submit', upload.array('referencePhotos', 5), async (req, res) => {
   try {
+    console.log('Received form data:', req.body);
+    console.log('Received files:', req.files);
+    console.log('File paths:', req.files.map(file => file.path));
+
     const { 
       name = 'Not provided', 
       email = 'Not provided', 
@@ -86,72 +85,57 @@ No magical profile data shared as per user preference.
 `;
 }
 
-// Compress images
-const compressedFiles = [];
-if (req.files && req.files.length > 0) {
-  for (const file of req.files) {
-    const compressedFilePath = file.path.replace(/\.\w+$/, '_compressed.jpg');
-    console.log('Original file:', file.path);
-    console.log('Compressed file:', compressedFilePath);
-    await sharp(file.path)
-      .resize(1000) // Resize to max width of 1000px
-      .jpeg({ quality: 80 }) // Convert to JPEG with 80% quality
-      .toFile(compressedFilePath);
-    console.log('Compression complete');
-    
-    compressedFiles.push({
-      filename: file.originalname.replace(/\.\w+$/, '.jpg'),
-      path: compressedFilePath
-    });
-
-    // Delete the original file
-    await fs.unlink(file.path);
-  }
-}
-
-emailContent += `
-Thank you for your artistry and dedication to bringing these magical portraits to life!
-
-Best regards,
-Your Magical Portrait Commission System
-`;
-
-    // Create a transporter using SMTP
     let transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: false, // Use TLS
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       }
     });
 
-    // Prepare email content
-    console.log('Compressed files for email:', compressedFiles);
+    let attachments = [];
+    if (req.files && req.files.length > 0) {
+      console.log('Creating attachments for email');
+      attachments = req.files.map(file => {
+        console.log('Attaching file:', file.originalname, 'Path:', file.path);
+        return {
+          filename: file.originalname,
+          path: file.path
+        };
+      });
+      console.log('Final attachments array:', attachments);
+    }
+
     let mailOptions = {
       from: '"Your App Name" <your-email@example.com>',
       to: process.env.EMAIL_USER,
       subject: "New Commission Request",
       text: emailContent,
       html: `<pre>${emailContent}</pre>`,
-      attachments: compressedFiles
+      attachments: attachments
     };
-    console.log('Mail options:', mailOptions);
 
-    // Send email
+    console.log('Mail options:', JSON.stringify(mailOptions, null, 2));
+
     let info = await transporter.sendMail(mailOptions);
     console.log('Email sent:', info.response);
 
-    // Delete compressed files after sending
-    for (const file of compressedFiles) {
+    // Clean up temporary files
+    for (const file of req.files) {
       await fs.unlink(file.path);
     }
 
     res.status(200).json({ message: 'Commission request submitted successfully' });
   } catch (error) {
-    console.error('Error in commission submission:', error);
-    res.status(500).json({ error: 'An error occurred while submitting the commission request.' });
+    console.error('Detailed error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'An error occurred while submitting the commission request.', 
+      details: error.message,
+      stack: error.stack
+    });
   }
 });
 
