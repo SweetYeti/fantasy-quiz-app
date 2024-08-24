@@ -174,6 +174,10 @@ function App() {
       setMagicalProfile(response.data);
       // Store the magical profile in localStorage
       localStorage.setItem('magicalProfile', JSON.stringify(response.data));
+      // Store the quiz answers in localStorage
+      localStorage.setItem('quizAnswers', JSON.stringify(quizData));
+      console.log('Stored magicalProfile:', localStorage.getItem('magicalProfile'));
+      console.log('Stored quizAnswers:', localStorage.getItem('quizAnswers'));
     } catch (error) {
       console.error('Error generating magical profile:', error);
       setMagicalProfile({ 
@@ -240,6 +244,8 @@ function App() {
   }, []);
 
   const handleCommissionStart = () => {
+    console.log('magicalProfile in localStorage:', localStorage.getItem('magicalProfile'));
+    console.log('quizAnswers in localStorage:', localStorage.getItem('quizAnswers'));
     setShowCommissionForm(true);
     setShowPolicyButtons(false);
   };
@@ -251,18 +257,46 @@ function App() {
   };
 
   const handleCommissionSubmit = async (formData) => {
-    const magicalProfile = JSON.parse(localStorage.getItem('magicalProfile'));
-    const dataToSend = {
-      ...formData,
-      magicalProfile
-    };
+    console.log('localStorage magicalProfile:', localStorage.getItem('magicalProfile'));
+    console.log('localStorage quizAnswers:', localStorage.getItem('quizAnswers'));
+
+    const magicalProfile = JSON.parse(localStorage.getItem('magicalProfile') || '{}');
+    const quizAnswers = JSON.parse(localStorage.getItem('quizAnswers') || '[]');
+
+    console.log('Parsed magicalProfile:', magicalProfile);
+    console.log('Parsed quizAnswers:', quizAnswers);
+
+    const dataToSend = new FormData();
+    
+    for (const key in formData) {
+      if (key === 'referencePhotos') {
+        formData[key].forEach((file, index) => {
+          dataToSend.append(`referencePhotos`, file);
+        });
+      } else {
+        dataToSend.append(key, formData[key]);
+      }
+    }
+    
+    // Append magicalProfile and quizAnswers as stringified JSON
+    dataToSend.append('magicalProfile', JSON.stringify(magicalProfile));
+    dataToSend.append('quizAnswers', JSON.stringify(quizAnswers));
+    
+    console.log('FormData contents:');
+    for (let [key, value] of dataToSend.entries()) {
+      console.log(key, value);
+    }
     
     try {
-      const response = await axios.post('http://localhost:3000/api/commission/submit', dataToSend);
+      const response = await axios.post('http://localhost:3000/api/commission/submit', dataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       console.log('Commission submission response:', response.data);
       
-      // After successful submission, remove the magical profile from localStorage
       localStorage.removeItem('magicalProfile');
+      localStorage.removeItem('quizAnswers');
       
       setShowCommissionForm(false);
       // You might want to add a new state for showing a confirmation message
@@ -290,8 +324,10 @@ function App() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Delete the reading data from local storage
-      localStorage.removeItem('magicalProfile');
+      if (!showCommissionForm) {
+        localStorage.removeItem('magicalProfile');
+        localStorage.removeItem('quizAnswers');
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -299,7 +335,7 @@ function App() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, []);
+  }, [showCommissionForm]);
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -350,9 +386,10 @@ function App() {
       )}
       {showCommissionForm && (
         <CommissionForm
-          profile={magicalProfile}
           onBack={handleCommissionBack}
           onSubmit={handleCommissionSubmit}
+          profile={JSON.parse(localStorage.getItem('magicalProfile'))}
+          quizAnswers={JSON.parse(localStorage.getItem('quizAnswers'))}
           onShowPrivacyPolicy={handleShowPrivacyPolicy}
           onShowTermsAndConditions={handleShowTermsAndConditions}
         />

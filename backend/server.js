@@ -8,6 +8,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.use(cors({
   origin: 'http://localhost:3001'
 }));
 app.use(express.json());
+const upload = multer({ dest: 'uploads/' });
+app.use(upload.array('referencePhotos', 5));
 
 // Serve static files from the React app's build directory
 app.use(express.static(path.join(__dirname, '../frontend/build')));

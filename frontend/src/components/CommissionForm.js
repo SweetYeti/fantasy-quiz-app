@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './CommissionForm.css';
 
 const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShowTermsAndConditions }) => {
+  console.log('CommissionForm profile prop:', profile);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,7 +13,8 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
     dataProcessingConsent: false,
     termsAccepted: false,
     marketingConsent: false,
-    referencePhotos: []
+    referencePhotos: [],
+    dataSharingPreference: 'full'
   });
 
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -41,33 +44,13 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
     setUploadedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.dataProcessingConsent || !formData.termsAccepted) {
       alert('Please accept the Privacy Policy and Terms & Conditions to proceed.');
       return;
     }
-
-    try {
-      const response = await fetch('http://localhost:3000/api/commission/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...formData, magicalProfile: profile }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit commission request');
-      }
-
-      await response.json();
-      alert('Commission request submitted successfully! Hanna will review your request and contact you soon.');
-      onSubmit(formData);
-    } catch (error) {
-      console.error('Error submitting commission request:', error);
-      alert('Failed to submit commission request. Please try again.');
-    }
+    onSubmit(formData);
   };
 
   return (
@@ -136,6 +119,42 @@ const CommissionForm = ({ onBack, profile, onSubmit, onShowPrivacyPolicy, onShow
                 <button onClick={() => removeFile(index)} className="remove-image">×</button>
               </div>
             ))}
+          </div>
+        </div>
+        <div className="data-sharing-preferences">
+          <h3>Data Sharing Preferences</h3>
+          <p>Choose how much of your magical profile you'd like to share with Hanna. Sharing more information allows for a more personalized artwork, but the choice is yours:</p>
+          <div className="radio-group">
+            <label>
+              <input
+                type="radio"
+                name="dataSharingPreference"
+                value="full"
+                checked={formData.dataSharingPreference === 'full'}
+                onChange={handleChange}
+              />
+              Full Profile: Share all quiz answers and your magical reading
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="dataSharingPreference"
+                value="reading"
+                checked={formData.dataSharingPreference === 'reading'}
+                onChange={handleChange}
+              />
+              Magical Reading Only: Share only your generated magical reading
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="dataSharingPreference"
+                value="custom"
+                checked={formData.dataSharingPreference === 'custom'}
+                onChange={handleChange}
+              />
+              Custom Instructions Only: Share only the information you provide in this form
+            </label>
           </div>
         </div>
         <div className="checkbox-group">
