@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import SupportOptions from './SupportOptions';
+import './ResultsPage.css'; // Make sure to create this CSS file
 
 const ResultsPage = ({ profile, isLoading, country, onCommissionStart }) => {
   const [animatedSections, setAnimatedSections] = useState([]);
@@ -7,121 +8,120 @@ const ResultsPage = ({ profile, isLoading, country, onCommissionStart }) => {
   useEffect(() => {
     if (!isLoading && profile && !profile.error) {
       const sections = [
-        'introduction', 'spiritualArchetype', 'elementalJourney', 'wisdomOfTheAges',
-        'innerLandscape', 'challengesAsCatalysts', 'pathForward', 'dailyPractices',
-        'spiritualEmblem', 'reflectiveQuestions', 'personalMantra', 'supportOptions'
+        'spiritualArchetype', 'coreStrengths', 'growthAreas', 'elementalInfluence',
+        'practicalWisdom', 'dailyPractices', 'reflectiveQuestions', 'personalMantra',
+        'magicalPortrait', 'conclusion', 'supportOptions'
       ];
       
-      let timer = 0;
       sections.forEach((section, index) => {
         setTimeout(() => {
           setAnimatedSections(prev => [...prev, section]);
-        }, timer);
-        timer += 300; // Increase delay for each section
+        }, index * 300);
       });
     }
   }, [isLoading, profile]);
 
-  const renderSection = (sectionName, content) => {
+  const renderProfileItem = (item) => {
+    if (typeof item === 'object' && item !== null) {
+      return (
+        <div className="profile-item">
+          <h3>{item.title || item.practice}</h3>
+          <p>{item.description}</p>
+          {item.benefit && <p className="benefit"><strong>Benefit:</strong> {item.benefit}</p>}
+        </div>
+      );
+    }
+    return <p>{item}</p>;
+  };
+
+  const renderSection = (sectionName, title, content) => {
     const isAnimated = animatedSections.includes(sectionName);
     return (
-      <div className={`results-section ${isAnimated ? 'animate-in' : ''}`}>
-        {content}
-      </div>
+      <section className={`results-section ${isAnimated ? 'animate-in' : ''}`}>
+        <h2 className="section-title">{title}</h2>
+        <div className="section-content">{content}</div>
+      </section>
     );
   };
 
+  if (isLoading) {
+    return <div className="results-page loading">Loading your magical profile...</div>;
+  }
+
+  if (!profile || profile.error) {
+    return (
+      <div className="results-page error">
+        <h2>Error</h2>
+        <p>Sorry, we couldn't load your profile. Please try again later.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="results-page">
-      <div className="content-frame">
-        {isLoading ? (
-          <div className="loading">Generating your magical profile...</div>
-        ) : profile && !profile.error ? (
-          <>
-            {renderSection('introduction', (
-              <>
-                <h1 className="results-title">Your Magical Essence Unveiled</h1>
-                <p className="results-introduction">{profile.introduction}</p>
-              </>
+      <div className="results-container">
+        {renderSection('spiritualArchetype', 'Your Archetype', renderProfileItem(profile.spiritualArchetype))}
+        {renderSection('coreStrengths', 'Core Strengths', 
+          <div className="grid-layout">
+            {profile.coreStrengths.map((strength, index) => (
+              <div key={index}>{renderProfileItem(strength)}</div>
             ))}
-            {renderSection('spiritualArchetype', (
-              <>
-                <h2 className="results-section-title">Your Spiritual Archetype: {profile.spiritualArchetype.name}</h2>
-                <p className="results-section-content">{profile.spiritualArchetype.description}</p>
-              </>
-            ))}
-            {renderSection('elementalJourney', (
-              <>
-                <h2 className="results-section-title">Your Elemental Journey</h2>
-                <p className="results-section-content">{profile.elementalJourney}</p>
-              </>
-            ))}
-            {renderSection('wisdomOfTheAges', (
-              <>
-                <h2 className="results-section-title">Wisdom of the Ages</h2>
-                <p className="results-section-content">{profile.wisdom}</p>
-              </>
-            ))}
-            {renderSection('innerLandscape', (
-              <>
-                <h2 className="results-section-title">Your Inner Landscape</h2>
-                <p className="results-section-content">{profile.innerLandscape}</p>
-              </>
-            ))}
-            {renderSection('challengesAsCatalysts', (
-              <>
-                <h2 className="results-section-title">Challenges as Catalysts</h2>
-                <p className="results-section-content">{profile.challengesAsCatalysts}</p>
-              </>
-            ))}
-            {renderSection('pathForward', (
-              <>
-                <h2 className="results-section-title">Your Path Forward</h2>
-                <p className="results-section-content">{profile.pathForward}</p>
-              </>
-            ))}
-            {renderSection('dailyPractices', (
-              <>
-                <h2 className="results-section-title">Your Daily Magical Practices</h2>
-                {profile.dailyPractices.map((practice, index) => (
-                  <div key={index} className="results-daily-practice">
-                    <h3 className="results-practice-title">{practice.practice}</h3>
-                    <p className="results-practice-description">{practice.description}</p>
-                  </div>
-                ))}
-              </>
-            ))}
-            {renderSection('spiritualEmblem', (
-              <>
-                <h2 className="results-section-title">Your Spiritual Emblem</h2>
-                <p className="results-section-content">{profile.spiritualEmblem}</p>
-              </>
-            ))}
-            {renderSection('reflectiveQuestions', (
-              <>
-                <h2 className="results-section-title">Reflective Questions for Your Journey</h2>
-                <ul className="results-reflective-questions">
-                  {profile.reflectiveQuestions.map((question, index) => (
-                    <li key={index} className="results-question">{question}</li>
-                  ))}
-                </ul>
-              </>
-            ))}
-            {renderSection('personalMantra', (
-              <>
-                <h2 className="results-section-title">Your Personal Mantra</h2>
-                <blockquote className="results-personal-mantra">{profile.personalMantra}</blockquote>
-              </>
-            ))}
-            {renderSection('supportOptions', (
-              <SupportOptions country={country} onCommissionStart={onCommissionStart} />
-            ))}
-          </>
-        ) : (
-          <div className="error">
-            <p>Error: {profile?.error || 'Failed to generate profile'}</p>
-            <p>Details: {profile?.details || 'No additional details available'}</p>
           </div>
+        )}
+        {renderSection('growthAreas', 'Growth Areas', 
+          <div className="grid-layout">
+            {profile.growthAreas.map((area, index) => (
+              <div key={index}>{renderProfileItem(area)}</div>
+            ))}
+          </div>
+        )}
+        {renderSection('elementalInfluence', 'Elemental Influence', renderProfileItem({ description: profile.elementalInfluence }))}
+        {renderSection('practicalWisdom', 'Practical Wisdom', 
+          <div className="grid-layout">
+            {profile.practicalWisdom.map((wisdom, index) => (
+              <div key={index}>{renderProfileItem(wisdom)}</div>
+            ))}
+          </div>
+        )}
+        {renderSection('dailyPractices', 'Daily Practices', 
+          <div className="grid-layout">
+            {profile.dailyPractices.map((practice, index) => (
+              <div key={index}>{renderProfileItem(practice)}</div>
+            ))}
+          </div>
+        )}
+        {renderSection('reflectiveQuestions', 'Reflective Questions', 
+          <div className="grid-layout">
+            {profile.reflectiveQuestions.map((question, index) => (
+              <div key={index} className="profile-item">
+                <p>{question}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {renderSection('personalMantra', 'Personal Mantra', 
+          <blockquote className="personal-mantra">{profile.personalMantra}</blockquote>
+        )}
+        {renderSection('magicalPortrait', 'Magical Portrait', 
+          <>
+            <p className="magical-portrait">{profile.magicalPortrait}</p>
+            <button className="commission-button" onClick={onCommissionStart}>
+              <div className="commission-button-particles">
+                <div className="commission-button-particle"></div>
+                <div className="commission-button-particle"></div>
+                <div className="commission-button-particle"></div>
+                <div className="commission-button-particle"></div>
+              </div>
+              <img src="/Images/paint-brush.png" alt="Paint brush" className="commission-button-icon" />
+              Request Custom Artwork
+            </button>
+          </>
+        )}
+        {renderSection('conclusion', 'Conclusion', 
+          <p className="conclusion">{profile.conclusion}</p>
+        )}
+        {renderSection('supportOptions', 'Support My Work', 
+          <SupportOptions country={country} />
         )}
       </div>
     </div>

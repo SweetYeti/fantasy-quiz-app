@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// Remove the following line:
+// import './QuizQuestion.css';
 
 const QuizQuestion = ({ question, onAnswer, onNext, onPrevious, currentAnswer, isLast, isFirst, totalQuestions, backgroundImage }) => {
   const [showFollowUp, setShowFollowUp] = useState(false);
@@ -13,15 +15,15 @@ const QuizQuestion = ({ question, onAnswer, onNext, onPrevious, currentAnswer, i
     switch (question.type) {
       case 'combinedChoice':
         return (
-          <div>
-            <div className="options-container">
-              {question.options.filter(option => option.value !== 'Other').map((option) => (
+          <div className="question-input">
+            <div className="options-container combined-choice">
+              {question.options.map((option) => (
                 <button
                   key={option.value}
                   className={`option-button ${currentAnswer?.value === option.value ? 'selected' : ''}`}
                   onClick={() => {
                     onAnswer({ value: option.value });
-                    setShowFollowUp(true);
+                    setShowFollowUp(option.value === "Other" || question.followUpQuestion);
                   }}
                 >
                   {option.label}
@@ -35,6 +37,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onPrevious, currentAnswer, i
                   onChange={(e) => onAnswer({ value: currentAnswer.value, explanation: e.target.value })}
                   className="text-input"
                   placeholder={question.followUpQuestion || "Please provide more details..."}
+                  maxLength={question.maxWords * 5}
                 />
               </div>
             )}
@@ -48,6 +51,19 @@ const QuizQuestion = ({ question, onAnswer, onNext, onPrevious, currentAnswer, i
             onChange={(e) => onAnswer(e.target.value)}
             className="text-input"
             placeholder="Type your answer here..."
+            maxLength={question.maxWords * 5}
+          />
+        );
+      case 'number':
+        return (
+          <input
+            type="number"
+            value={currentAnswer || ''}
+            onChange={(e) => onAnswer(e.target.value)}
+            className="number-input"
+            min={question.min}
+            max={question.max}
+            placeholder="Enter a number"
           />
         );
       case 'image':
@@ -73,7 +89,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onPrevious, currentAnswer, i
     <div className={`quiz-question ${fadeIn ? 'fade-in' : ''}`} style={{backgroundImage: `url(${backgroundImage})`}}>
       <div className="question-content">
         <div className="progress-bar">
-          <div className="progress" style={{ width: `${(question.id / totalQuestions) * 100}%` }}></div>
+          <div className="progress" style={{ width: `${((question.id) / totalQuestions) * 100}%` }}></div>
         </div>
         <p className="question-text">{question.text}</p>
         {renderQuestionInput()}

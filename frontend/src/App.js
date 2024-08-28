@@ -12,6 +12,7 @@ import Modal from './components/Modal';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsAndConditions from './components/TermsAndConditions';
 import DebugPanel from './components/DebugPanel';
+import ThankYouConfirmation from './components/ThankYouConfirmation';
 
 const zodiacSigns = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -26,29 +27,169 @@ const zodiacImages = zodiacSigns.reduce((acc, sign) => {
 console.log('Zodiac Images:', zodiacImages);
 
 const questions = [
-  { id: 1, text: "What's your name?", type: "text", maxWords: 5 },
-  { id: 2, section: "Joy and Peace", text: "What brings you the most joy and fulfillment in life?", type: "longText", maxWords: 100 },
-  { id: 3, section: "Joy and Peace", text: "When do you feel most at peace or in harmony with yourself?", type: "longText", maxWords: 100 },
-  { id: 4, section: "Imagination and Perception", text: "Imagine you're in a lucid dream where you can shape reality. What world would you create?", type: "longText", maxWords: 150 },
-  { id: 5, section: "Imagination and Perception", text: "What's the first word that comes to mind when you think of 'destiny'?", type: "text", maxWords: 1 },
-  { id: 6, section: "Life Patterns and Purpose", text: "What recurring patterns or themes do you notice in your life's journey?", type: "longText", maxWords: 100 },
-  { id: 7, section: "Life Patterns and Purpose", text: "What do you believe your life purpose is?", type: "longText", maxWords: 100 },
-  { id: 8, section: "Self-Reflection and Future", text: "If you could have a conversation with your future self, what would you most want to know?", type: "longText", maxWords: 100 },
-  { id: 9, section: "Self-Reflection and Future", text: "If your life was a book, what would be the title of the current chapter?", type: "text", maxWords: 10 },
-  { id: 10, section: "Self-Reflection and Future", text: "What do you like best about yourself?", type: "longText", maxWords: 100 },
+  { id: 1, text: "What's your name?", type: "text", maxWords: 5, purpose: "To personalize the reading" },
+  { id: 2, text: "How old are you?", type: "number", min: 1, max: 120, purpose: "To tailor the reading to the user's life stage" },
   { 
-    id: 11, 
-    section: "Magical Affinity",
+    id: 3, 
     text: "What's your zodiac sign?", 
     type: "image", 
-    options: zodiacSigns.map(sign => ({
-      value: sign,
-      label: sign
-    }))
+    options: zodiacSigns.map(sign => ({ value: sign, label: sign })),
+    purpose: "To incorporate astrological influences"
+  },
+  { 
+    id: 4, 
+    text: "If you could only wear one color for the rest of your life, which one would it be?", 
+    type: "text", 
+    maxWords: 1, 
+    purpose: "To understand color associations and personality"
+  },
+  { 
+    id: 5, 
+    text: "What magical setting are you most drawn to?", 
+    type: "combinedChoice", 
+    options: [
+      { value: "Enchanted Forest", label: "Enchanted Forest" },
+      { value: "Crystal Cave", label: "Crystal Cave" },
+      { value: "Serene Lake", label: "Serene Lake" },
+      { value: "Misty Mountains", label: "Misty Mountains" },
+      { value: "Snowy Winter Cottage", label: "Snowy Winter Cottage" }
+    ],
+    followUpQuestion: "Why does this setting resonate with you?",
+    maxWords: 50,
+    purpose: "To identify preferred magical environments and their personal significance"
+  },
+  { 
+    id: 6, 
+    text: "What's your favorite season?", 
+    type: "image", 
+    options: [
+      { value: "Spring", label: "Spring" },
+      { value: "Summer", label: "Summer" },
+      { value: "Autumn", label: "Autumn" },
+      { value: "Winter", label: "Winter" }
+    ],
+    purpose: "To understand seasonal influences and personality traits"
+  },
+  { 
+    id: 7, 
+    text: "When do you feel most at peace or in harmony with yourself?", 
+    type: "longText", 
+    maxWords: 50, 
+    purpose: "To identify sources of inner peace and harmony"
+  },
+  { 
+    id: 8, 
+    text: "What brings you the most joy and fulfillment in life?", 
+    type: "longText", 
+    maxWords: 50, 
+    purpose: "To understand sources of happiness and fulfillment"
+  },
+  { 
+    id: 9, 
+    text: "If you could have any magical power, what would it be?", 
+    type: "text", 
+    maxWords: 10, 
+    purpose: "To identify desired abilities and personal aspirations"
+  },
+  { 
+    id: 10, 
+    text: "Imagine you're in a lucid dream where you can shape reality. What world would you create?", 
+    type: "longText", 
+    maxWords: 100, 
+    purpose: "To explore the user's ideal world and values"
+  },
+  { 
+    id: 11, 
+    text: "If you were reincarnated into a wild animal, what would it be and why?", 
+    type: "longText", 
+    maxWords: 50, 
+    purpose: "To understand self-perception and desired traits"
   },
   { 
     id: 12, 
-    section: "Magical Affinity",
+    text: "What animal would you choose as your magical familiar?", 
+    type: "combinedChoice", 
+    options: [
+      { value: "Cat", label: "Cat" },
+      { value: "Owl", label: "Owl" },
+      { value: "Wolf", label: "Wolf" },
+      { value: "Fox", label: "Fox" },
+      { value: "Raven", label: "Raven" },
+      { value: "Deer", label: "Deer" },
+      { value: "Other", label: "Other" }
+    ],
+    followUpQuestion: "Why did you choose this animal as your familiar?",
+    maxWords: 50,
+    purpose: "To identify complementary traits and desired support"
+  },
+  { 
+    id: 13, 
+    text: "What's your preferred method of divination or spiritual insight?", 
+    type: "combinedChoice", 
+    options: [
+      { value: "Tarot", label: "Tarot" },
+      { value: "Astrology", label: "Astrology" },
+      { value: "Crystal Ball", label: "Crystal Ball" },
+      { value: "Runes", label: "Runes" },
+      { value: "Tea Leaves", label: "Tea Leaves" },
+      { value: "I don't use divination", label: "I don't use divination" },
+      { value: "Other", label: "Other" }
+    ],
+    followUpQuestion: "Please specify your preferred method:",
+    maxWords: 20,
+    purpose: "To understand preferred methods of insight and guidance"
+  },
+  { 
+    id: 14, 
+    text: "What's the first word that comes to mind when you think of 'destiny'?", 
+    type: "text", 
+    maxWords: 1, 
+    purpose: "To understand the user's perception of fate and free will"
+  },
+  { 
+    id: 15, 
+    text: "What recurring patterns or themes do you notice in your life's journey?", 
+    type: "longText", 
+    maxWords: 100, 
+    purpose: "To identify life patterns and recurring themes"
+  },
+  { 
+    id: 16, 
+    text: "What do you believe your life purpose is?", 
+    type: "longText", 
+    maxWords: 100, 
+    purpose: "To understand the user's sense of purpose and direction"
+  },
+  { 
+    id: 17, 
+    text: "If you could have a conversation with your future self, what would you most want to know?", 
+    type: "longText", 
+    maxWords: 100, 
+    purpose: "To explore future aspirations and concerns"
+  },
+  { 
+    id: 18, 
+    text: "If your life was a book, what would be the title of the current chapter?", 
+    type: "text", 
+    maxWords: 10, 
+    purpose: "To understand the user's current life phase"
+  },
+  { 
+    id: 19, 
+    text: "What do you like best about yourself?", 
+    type: "longText", 
+    maxWords: 50, 
+    purpose: "To identify positive self-image and self-appreciation"
+  },
+  { 
+    id: 20, 
+    text: "What part of yourself do you hide from others?", 
+    type: "longText", 
+    maxWords: 50, 
+    purpose: "To explore hidden aspects of personality and potential inner conflicts"
+  },
+  { 
+    id: 21, 
     text: "Choose your magical element:", 
     type: "image", 
     options: [
@@ -57,9 +198,10 @@ const questions = [
       { value: "Earth", label: "Earth" },
       { value: "Air", label: "Air" },
       { value: "Spirit", label: "Spirit" }
-    ], 
+    ],
     followUpQuestion: "How does this element manifest in your life?", 
-    maxWords: 50 
+    maxWords: 50,
+    purpose: "To identify elemental affinity and its influence"
   },
 ];
 
@@ -76,6 +218,15 @@ const backgroundImages = [
   '/images/question10-bg.jpg',
   '/images/question11-bg.jpg',
   '/images/question12-bg.jpg',
+  '/images/question13-bg.jpg',
+  '/images/question14-bg.jpg',
+  '/images/question15-bg.jpg',
+  '/images/question16-bg.jpg',
+  '/images/question17-bg.jpg',
+  '/images/question18-bg.jpg',
+  '/images/question19-bg.jpg',
+  '/images/question20-bg.jpg',
+  '/images/question21-bg.jpg',
 ];
 
 function App() {
@@ -94,6 +245,7 @@ function App() {
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
   const [showPolicyButtons, setShowPolicyButtons] = useState(true);
   const [debugMode, setDebugMode] = useState(false);
+  const [showThankYouConfirmation, setShowThankYouConfirmation] = useState(false);
 
   useEffect(() => {
     console.log('App component mounted');
@@ -158,16 +310,25 @@ function App() {
     setShowResults(true);
     setIsConjuring(true); // Start conjuring effect
     try {
-      const quizData = questions.map(question => ({
-        id: question.id,
-        text: question.text,
-        type: question.type,
-        answer: answers[question.id],
-        purpose: getQuestionPurpose(question.id)
-      }));
+      const quizData = questions.map(question => {
+        const answer = answers[question.id];
+        return {
+          id: question.id,
+          text: question.text,
+          type: question.type,
+          answer: typeof answer === 'object' ? answer.value : answer,
+          explanation: typeof answer === 'object' ? answer.explanation : undefined,
+          purpose: getQuestionPurpose(question.id)
+        };
+      });
+
+      const zodiacSign = answers[11];
+      const elementalAffinity = answers[12];
 
       const response = await axios.post('http://localhost:3000/api/quiz/submit', { 
         quizData,
+        zodiacSign,
+        elementalAffinity,
         context: "This quiz is designed to uncover the user's spiritual essence and provide personalized insights. The answers should be interpreted in the context of the user's spiritual journey."
       });
       console.log('API response:', response.data);
@@ -195,27 +356,45 @@ function App() {
       case 1:
         return "To personalize the reading with the user's name";
       case 2:
-        return "To understand the user's sources of joy and fulfillment";
+        return "To tailor the reading to the user's life stage";
       case 3:
-        return "To identify the user's state of inner peace and harmony";
+        return "To incorporate astrological influences";
       case 4:
-        return "To explore the user's creative potential and imagination";
+        return "To understand color associations and personality";
       case 5:
-        return "To understand the user's perception of destiny";
+        return "To identify preferred magical environments and their personal significance";
       case 6:
-        return "To identify recurring patterns and themes in the user's life";
+        return "To understand seasonal influences and personality traits";
       case 7:
-        return "To understand the user's sense of purpose and direction";
+        return "To identify sources of inner peace and harmony";
       case 8:
-        return "To gain insight into the user's future aspirations and concerns";
+        return "To understand sources of happiness and fulfillment";
       case 9:
-        return "To understand the user's current life chapter and perspective";
+        return "To identify desired abilities and personal aspirations";
       case 10:
-        return "To identify the user's positive self-image and self-appreciation";
+        return "To explore the user's ideal world and values";
       case 11:
-        return "To incorporate astrological influences into the reading";
+        return "To understand self-perception and desired traits";
       case 12:
-        return "To identify the user's primary elemental energy";
+        return "To identify complementary traits and desired support";
+      case 13:
+        return "To understand preferred methods of insight and guidance";
+      case 14:
+        return "To understand the user's perception of fate and free will";
+      case 15:
+        return "To identify life patterns and recurring themes";
+      case 16:
+        return "To understand the user's sense of purpose and direction";
+      case 17:
+        return "To explore future aspirations and concerns";
+      case 18:
+        return "To understand the user's current life phase";
+      case 19:
+        return "To identify positive self-image and self-appreciation";
+      case 20:
+        return "To explore hidden aspects of personality and potential inner conflicts";
+      case 21:
+        return "To identify elemental affinity and its influence";
       default:
         return "To gather additional insights about the user's spiritual profile";
     }
@@ -282,9 +461,7 @@ function App() {
       });
       console.log('Commission submission response:', response.data);
       
-      localStorage.removeItem('magicalProfile');
-      localStorage.removeItem('quizAnswers');
-      
+      setShowThankYouConfirmation(true);
       setShowCommissionForm(false);
     } catch (error) {
       console.error('Error submitting commission:', error);
@@ -295,6 +472,7 @@ function App() {
       }
     }
   };
+
 
   const handleShowPrivacyPolicy = () => {
     // Logic to show privacy policy modal
@@ -345,7 +523,7 @@ function App() {
       <VideoBackground />
       <FireflyEffect isConjuring={isConjuring} />
       {!quizStarted && <StartPage onStartQuiz={handleStartQuiz} />}
-      {quizStarted && !showEmailCapture && !showResults && !showCommissionForm && (
+      {quizStarted && !showEmailCapture && !showResults && !showCommissionForm && !showThankYouConfirmation && (
         <QuizQuestion
           question={questions[currentQuestion]}
           onAnswer={handleAnswer}
@@ -365,7 +543,7 @@ function App() {
           onBack={handlePrevious}
         />
       )}
-      {showResults && !showCommissionForm && (
+      {showResults && !showCommissionForm && !showThankYouConfirmation && (
         <ResultsPage 
           profile={magicalProfile} 
           isLoading={isLoading} 
@@ -383,6 +561,14 @@ function App() {
           onShowTermsAndConditions={handleShowTermsAndConditions}
         />
       )}
+      {showThankYouConfirmation && (
+        <ThankYouConfirmation
+          onReturnToReading={() => {
+            setShowThankYouConfirmation(false);
+            setShowResults(true);
+          }}
+        />
+      )}
       <Modal
         isOpen={showPrivacyPolicy}
         onClose={handleCloseModal}
@@ -395,7 +581,7 @@ function App() {
         title=""
         content={<TermsAndConditions />}
       />
-      {showPolicyButtons && !showCommissionForm && !showResults && (
+      {showPolicyButtons && !showCommissionForm && !showResults && !showThankYouConfirmation && (
         <div className="footer-links">
           <button onClick={handleShowPrivacyPolicy}>Privacy Policy</button>
           <button onClick={handleShowTermsAndConditions}>Terms and Conditions</button>

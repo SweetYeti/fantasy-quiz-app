@@ -139,4 +139,34 @@ No magical profile data shared as per user preference.
   }
 });
 
+router.post('/send-reading', async (req, res) => {
+  try {
+    const { email, magicalProfile } = req.body;
+
+    // Create email content
+    const emailContent = `
+      Your Magical Reading
+
+      ${Object.entries(magicalProfile).map(([key, value]) => `${key}: ${value}`).join('\n\n')}
+    `;
+
+    // Set up email options
+    let mailOptions = {
+      from: '"Your App Name" <your-email@example.com>',
+      to: email,
+      subject: "Your Magical Reading",
+      text: emailContent,
+    };
+
+    // Send email
+    let info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', info.response);
+
+    res.status(200).json({ message: 'Reading sent successfully' });
+  } catch (error) {
+    console.error('Error sending reading:', error);
+    res.status(500).json({ error: 'Failed to send reading' });
+  }
+});
+
 module.exports = router;

@@ -27,58 +27,85 @@ router.post('/submit', async (req, res) => {
 
 async function generateMagicalProfile(quizData, context) {
   const userName = quizData.find(item => item.id === 1)?.answer || "Seeker";
+  const zodiacSign = quizData.find(item => item.id === 3)?.answer || "Unknown";
+  const elementalAffinity = quizData.find(item => item.id === 9)?.answer || "Unknown";
 
   const prompt = `
-Create a deeply personal, narrative-based magical profile for ${userName}. Use vivid imagery and metaphors that align with their responses. The profile should feel like it's speaking directly to their soul, demonstrating a profound understanding of their essence. Structure the response as follows:
+Create a personal, practical magical profile for ${userName}. Use clear language with a mystical tone. Make it feel tailored to their soul, showing understanding of their essence. Structure as follows:
 
-1. Introduction: A poetic, imagery-rich description of ${userName}'s overall spiritual essence.
-2. The Spiritual Archetype: Introduce a personalized archetype that embodies ${userName}'s core attributes based on their quiz responses.
-3. The Elemental Journey: Describe how different elements shape ${userName}'s spiritual path, with emphasis on their elemental affinity.
-4. Wisdom of the Ages: Connect their profile to ancient wisdom and historical/cultural references that resonate with their responses.
-5. The Inner Landscape: Dive deep into ${userName}'s emotional and intuitive world, incorporating their responses about joy, peace, and self-reflection.
-6. Challenges as Catalysts: Reframe ${userName}'s spiritual challenges as opportunities for growth, referencing their life patterns and purpose.
-7. The Path Forward: Outline potential future developments and growth areas for ${userName}, incorporating their aspirations and the world they'd create in a lucid dream.
-8. Daily Practices: Offer concrete, personalized spiritual practices tailored to ${userName}'s profile and their responses about peace and harmony.
-9. Your Spiritual Emblem: Describe a symbolic representation of ${userName}'s essence (which could be captured in a portrait), incorporating their zodiac sign and elemental affinity.
-10. Reflective Questions: Engage ${userName} with three thought-provoking questions based on their profile and responses.
-11. Personal Mantra: Provide a unique affirmation encapsulating ${userName}'s essence, incorporating their perception of destiny.
+1. Spiritual Archetype: A brief, evocative title capturing ${userName}'s core attributes (e.g., "The Practical Dreamer", "The Empathetic Guardian").
+
+2. Archetype Introduction (12 sentences):
+   Use this template:
+   [Opener] [Clarification] [Why it matters]
+   [Expand] [Story/insight] [Build on story] [Small conclusion] [Why conclusion matters]
+   [Recap] [Reinforce with new insight] [Drive point home]
+   [Important takeaway]
+
+3. Core Strengths (3-5 items): List ${userName}'s key spiritual strengths, directly referencing their quiz answers. Use the 1/5/1 structure for each:
+   [Opener]
+   [Clarify, reinforce, build, explain why, drive home]
+   [Strong conclusion]
+
+4. Growth Areas (3-5 items): Identify areas for spiritual growth, framing challenges as opportunities. Use the 1/5/1 structure for each.
+
+5. Elemental Influence: Briefly explain how ${userName}'s elemental affinity (${elementalAffinity}) shapes their path. Use the 1/5/1 structure.
+
+6. Practical Wisdom (3-5 items): Offer actionable advice based on ${userName}'s responses, connecting ancient wisdom to modern life. Use the 1/5/1 structure for each.
+
+7. Daily Practices (3 items): Suggest concrete, personalized spiritual practices. Format as:
+   - Practice: [Name]
+     Description: [Brief explanation using 1/5/1 structure]
+     Benefit: [How it helps]
+
+8. Reflective Questions (3 questions): Provide thought-provoking questions based on ${userName}'s profile.
+
+9. Personal Mantra (1 sentence): A concise, powerful affirmation encapsulating ${userName}'s essence.
+
+10. Magical Portrait (7 sentences): Describe a vivid, symbolic representation of ${userName}'s magical essence that could be captured in a portrait. Incorporate their zodiac sign (${zodiacSign}) and elemental affinity (${elementalAffinity}) in a way that is empowering and enchanting. This description should paint a clear picture of how their unique magical qualities might be visually represented.
+
+11. Conclusion (7 sentences): Summarize the key points of ${userName}'s profile and offer encouragement for their spiritual journey.
 
 Use the following quiz data to inform your response:
 
-${quizData.map(item => `Section: ${item.section || 'N/A'}
-Question: ${item.text}
+${quizData.map(item => `Question: ${item.text}
 Answer: ${JSON.stringify(item.answer)}
 Purpose: ${item.purpose || 'N/A'}`).join('\n\n')}
 
 Context: ${context}
 
-Ensure the response is deeply personal, using ${userName}'s name throughout, and create a cohesive narrative that flows naturally between sections. The tone should be mystical, insightful, and encouraging.
+Ensure the response is personal, using ${userName}'s name throughout. Be practical, insightful, and encouraging while maintaining a mystical tone. Avoid overly abstract language.
 
 Format the response as a JSON object with the following structure:
 {
-  "introduction": "string",
   "spiritualArchetype": {
-    "name": "string",
+    "title": "string",
     "description": "string"
   },
-  "elementalJourney": "string",
-  "wisdomOfTheAges": "string",
-  "innerLandscape": "string",
-  "challengesAsCatalysts": "string",
-  "pathForward": "string",
-  "dailyPractices": [
-    { "practice": "string", "description": "string" }
+  "coreStrengths": [
+    { "title": "string", "description": "string" }
   ],
-  "spiritualEmblem": "string",
+  "growthAreas": [
+    { "title": "string", "description": "string" }
+  ],
+  "elementalInfluence": "string",
+  "practicalWisdom": [
+    { "title": "string", "description": "string" }
+  ],
+  "dailyPractices": [
+    { "practice": "string", "description": "string", "benefit": "string" }
+  ],
   "reflectiveQuestions": ["string", "string", "string"],
-  "personalMantra": "string"
+  "personalMantra": "string",
+  "magicalPortrait": "string",
+  "conclusion": "string"
 }`;
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 2000
+      max_tokens: 3500
     });
 
     if (!response.choices || response.choices.length === 0) {
@@ -86,12 +113,13 @@ Format the response as a JSON object with the following structure:
     }
 
     const content = response.choices[0].message.content;
+    console.log('Raw OpenAI response:', content);
     const parsedContent = JSON.parse(content);
 
     console.log('Parsed OpenAI response:', parsedContent);
 
     // Validate the parsed content
-    const requiredFields = ['introduction', 'spiritualArchetype', 'elementalJourney', 'wisdomOfTheAges', 'innerLandscape', 'challengesAsCatalysts', 'pathForward', 'dailyPractices', 'spiritualEmblem', 'reflectiveQuestions', 'personalMantra'];
+    const requiredFields = ['spiritualArchetype', 'coreStrengths', 'growthAreas', 'elementalInfluence', 'practicalWisdom', 'dailyPractices', 'reflectiveQuestions', 'personalMantra', 'magicalPortrait', 'conclusion'];
     requiredFields.forEach(field => {
       if (!parsedContent[field]) {
         throw new Error(`Missing required field: ${field}`);
