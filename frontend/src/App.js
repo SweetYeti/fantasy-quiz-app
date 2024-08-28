@@ -13,6 +13,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsAndConditions from './components/TermsAndConditions';
 import DebugPanel from './components/DebugPanel';
 import ThankYouConfirmation from './components/ThankYouConfirmation';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 
 const zodiacSigns = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -519,85 +520,87 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
-      <VideoBackground />
-      <FireflyEffect isConjuring={isConjuring} />
-      {!quizStarted && <StartPage onStartQuiz={handleStartQuiz} />}
-      {quizStarted && !showEmailCapture && !showResults && !showCommissionForm && !showThankYouConfirmation && (
-        <QuizQuestion
-          question={questions[currentQuestion]}
-          onAnswer={handleAnswer}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
-          currentAnswer={answers[questions[currentQuestion].id]}
-          isLast={currentQuestion === questions.length - 1}
-          isFirst={currentQuestion === 0}
-          totalQuestions={questions.length}
-          backgroundImage={backgroundImages[currentQuestion]}
+    <Router>
+      <div className="App">
+        <VideoBackground />
+        <FireflyEffect isConjuring={isConjuring} />
+        {!quizStarted && <StartPage onStartQuiz={handleStartQuiz} />}
+        {quizStarted && !showEmailCapture && !showResults && !showCommissionForm && !showThankYouConfirmation && (
+          <QuizQuestion
+            question={questions[currentQuestion]}
+            onAnswer={handleAnswer}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            currentAnswer={answers[questions[currentQuestion].id]}
+            isLast={currentQuestion === questions.length - 1}
+            isFirst={currentQuestion === 0}
+            totalQuestions={questions.length}
+            backgroundImage={backgroundImages[currentQuestion]}
+          />
+        )}
+        {showEmailCapture && (
+          <EmailCapture
+            onSubmit={handleEmailCapture}
+            onSkip={handleSkipEmail}
+            onBack={handlePrevious}
+          />
+        )}
+        {showResults && !showCommissionForm && !showThankYouConfirmation && (
+          <ResultsPage 
+            profile={magicalProfile} 
+            isLoading={isLoading} 
+            country={country} 
+            onCommissionStart={handleCommissionStart}
+          />
+        )}
+        {showCommissionForm && (
+          <CommissionForm
+            onBack={handleCommissionBack}
+            onSubmit={handleCommissionSubmit}
+            profile={JSON.parse(localStorage.getItem('magicalProfile'))}
+            quizAnswers={JSON.parse(localStorage.getItem('quizAnswers'))}
+            onShowPrivacyPolicy={handleShowPrivacyPolicy}
+            onShowTermsAndConditions={handleShowTermsAndConditions}
+          />
+        )}
+        {showThankYouConfirmation && (
+          <ThankYouConfirmation
+            onReturnToReading={() => {
+              setShowThankYouConfirmation(false);
+              setShowResults(true);
+            }}
+          />
+        )}
+        <Modal
+          isOpen={showPrivacyPolicy}
+          onClose={handleCloseModal}
+          title=""
+          content={<PrivacyPolicy />}
         />
-      )}
-      {showEmailCapture && (
-        <EmailCapture
-          onSubmit={handleEmailCapture}
-          onSkip={handleSkipEmail}
-          onBack={handlePrevious}
+        <Modal
+          isOpen={showTermsAndConditions}
+          onClose={handleCloseModal}
+          title=""
+          content={<TermsAndConditions />}
         />
-      )}
-      {showResults && !showCommissionForm && !showThankYouConfirmation && (
-        <ResultsPage 
-          profile={magicalProfile} 
-          isLoading={isLoading} 
-          country={country} 
-          onCommissionStart={handleCommissionStart}
-        />
-      )}
-      {showCommissionForm && (
-        <CommissionForm
-          onBack={handleCommissionBack}
-          onSubmit={handleCommissionSubmit}
-          profile={JSON.parse(localStorage.getItem('magicalProfile'))}
-          quizAnswers={JSON.parse(localStorage.getItem('quizAnswers'))}
-          onShowPrivacyPolicy={handleShowPrivacyPolicy}
-          onShowTermsAndConditions={handleShowTermsAndConditions}
-        />
-      )}
-      {showThankYouConfirmation && (
-        <ThankYouConfirmation
-          onReturnToReading={() => {
-            setShowThankYouConfirmation(false);
-            setShowResults(true);
-          }}
-        />
-      )}
-      <Modal
-        isOpen={showPrivacyPolicy}
-        onClose={handleCloseModal}
-        title=""
-        content={<PrivacyPolicy />}
-      />
-      <Modal
-        isOpen={showTermsAndConditions}
-        onClose={handleCloseModal}
-        title=""
-        content={<TermsAndConditions />}
-      />
-      {showPolicyButtons && !showCommissionForm && !showResults && !showThankYouConfirmation && (
-        <div className="footer-links">
-          <button onClick={handleShowPrivacyPolicy}>Privacy Policy</button>
-          <button onClick={handleShowTermsAndConditions}>Terms and Conditions</button>
-        </div>
-      )}
-      {debugMode && (
-        <DebugPanel
-          setCurrentQuestion={setCurrentQuestion}
-          setShowEmailCapture={setShowEmailCapture}
-          setShowResults={setShowResults}
-          setQuizStarted={setQuizStarted}
-          setShowCommissionForm={setShowCommissionForm}
-          totalQuestions={questions.length}
-        />
-      )}
-    </div>
+        {showPolicyButtons && !showCommissionForm && !showResults && !showThankYouConfirmation && (
+          <div className="footer-links">
+            <button onClick={handleShowPrivacyPolicy}>Privacy Policy</button>
+            <button onClick={handleShowTermsAndConditions}>Terms and Conditions</button>
+          </div>
+        )}
+        {debugMode && (
+          <DebugPanel
+            setCurrentQuestion={setCurrentQuestion}
+            setShowEmailCapture={setShowEmailCapture}
+            setShowResults={setShowResults}
+            setQuizStarted={setQuizStarted}
+            setShowCommissionForm={setShowCommissionForm}
+            totalQuestions={questions.length}
+          />
+        )}
+      </div>
+    </Router>
   );
 }
 
