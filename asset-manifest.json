@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/fantasy-quiz-app/static/css/main.ae853579.css",
+    "main.css": "/fantasy-quiz-app/static/css/main.ae59de08.css",
     "main.js": "/fantasy-quiz-app/static/js/main.fed752dd.js",
     "static/media/proximanova_regular.ttf": "/fantasy-quiz-app/static/media/proximanova_regular.8181ca4b7c2d1189d78a.ttf",
     "static/media/TAN - AEGEAN Regular.ttf": "/fantasy-quiz-app/static/media/TAN - AEGEAN Regular.5e95f090f7bbde713b05.ttf",
     "index.html": "/fantasy-quiz-app/index.html",
-    "main.ae853579.css.map": "/fantasy-quiz-app/static/css/main.ae853579.css.map",
+    "main.ae59de08.css.map": "/fantasy-quiz-app/static/css/main.ae59de08.css.map",
     "main.fed752dd.js.map": "/fantasy-quiz-app/static/js/main.fed752dd.js.map"
   },
   "entrypoints": [
-    "static/css/main.ae853579.css",
+    "static/css/main.ae59de08.css",
     "static/js/main.fed752dd.js"
   ]
 }
