@@ -1,0 +1,3 @@
+.video-background {
+    pointer-events: none; /* Prevent interaction with the video */
+  }

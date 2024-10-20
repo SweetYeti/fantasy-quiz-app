@@ -1,0 +1,48 @@
+.debug-panel {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .debug-panel h3 {
+    margin-top: 0;
+  }
+  
+  .debug-panel-scrollable {
+    overflow-y: auto;
+    max-height: calc(90vh - 100px); /* Adjust based on your needs */
+    padding-right: 10px;
+  }
+  
+  .debug-panel button {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    padding: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .debug-panel button:hover {
+    background-color: #45a049;
+  }
+  
+  .debug-panel label {
+    display: block;
+    margin-top: 10px;
+  }
+  
+  .debug-panel input[type="checkbox"] {
+    margin-left: 5px;
+  }
